@@ -1,0 +1,11 @@
+from transformers import AutoTokenizer, AutoModelForCausalLM
+
+tokenizer = AutoTokenizer.from_pretrained("ncfrey/ChemGPT-4.7M")
+model = AutoModelForCausalLM.from_pretrained("ncfrey/ChemGPT-4.7M", device_map="auto")
+
+
+##cleantox dataset
+
+from datasets import load_dataset
+
+ds = load_dataset("zpn/clintox")

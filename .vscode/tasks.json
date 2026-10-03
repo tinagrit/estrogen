@@ -1,0 +1,15 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "Train ERalpha predictors",
+			"type": "shell",
+			"command": "C:/Users/sweee/AppData/Local/Microsoft/WindowsApps/python3.11.exe",
+			"args": [
+				"train_models.py"
+			],
+			"isBackground": false,
+			"problemMatcher": []
+		}
+	]
+}
