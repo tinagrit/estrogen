@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <title>Estrogen Receptor Blocker</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">    <link rel="stylesheet" href="/styles.css" />
+    <script src="/app.js" defer></script>
+  </head>
+  <body>
+    <main>
+      <section class="workspace" aria-label="Molecule workspace">
+        <header>
+          <h1>Estrogen Receptor Blocker</h1>
+        </header>
+
+        <nav class="mode-tabs" aria-label="Workflow">
+          <button class="mode-tab active" data-panel="generate" type="button">
+            Generate
+          </button>
+          <button class="mode-tab" data-panel="optimize" type="button">
+            Optimize
+          </button>
+        </nav>
+
+        <div class="panel active" id="generate-panel">
+          <form class="input-card" id="generate-form">
+            <h2>Enter your partial strand to generate.</h2>
+            <textarea id="prefix" name="prefix" rows="4" required maxlength="500" placeholder="Enter in SMILES format"></textarea>
+            <div class="example-row">
+              <span>Examples</span>
+              <button type="button" class="example" data-target="prefix" data-value="CCOc1ccc(">CCOc1ccc(</button>
+              <button type="button" class="example" data-target="prefix" data-value="CC(=O)Nc1ccc(">CC(=O)Nc1ccc(</button>
+            </div>
+
+            
+
+            <div class="panel-divider panel-divider-reversed advanced">
+              <div class="panel-left" style="flex: 0 0 40%;">
+                <p class="filter-summary">
+                  Generation powered by ChemGPT-4.7M.<br>
+                  Filter criteria (RDKit):
+                </p>
+                <ul class="filter-summary">
+                  <li>
+                    molecular weight ≤ 500
+                    <button class="help-button" type="button" aria-label="Explain molecular weight" aria-expanded="false" aria-controls="help-bubble" data-help="Molecular weight is the total mass of the molecule's atoms in daltons. Lower values often make absorption and distribution easier.">?</button>
+                  </li>
+                  <li>
+                    LogP ≤ 5
+                    <button class="help-button" type="button" aria-label="Explain LogP" aria-expanded="false" aria-controls="help-bubble" data-help="LogP estimates how strongly a neutral molecule prefers an oily environment over water. Higher values mean poor solubility or absorption.">?</button>
+                  </li>
+                  <li>
+                    HBD ≤ 5
+                    <button class="help-button" type="button" aria-label="Explain hydrogen-bond donors" aria-expanded="false" aria-controls="help-bubble" data-help="Hydrogen-bond donor groups, usually O-H and N-H groups. Too many donors can make it harder for a molecule to cross membranes.">?</button>
+                  </li>
+                  <li>
+                    HBA ≤ 10
+                    <button class="help-button" type="button" aria-label="Explain hydrogen-bond acceptors" aria-expanded="false" aria-controls="help-bubble" data-help="Hydrogen-bond acceptors are the atoms that can accept a hydrogen bond, commonly oxygen and nitrogen atoms. Too many acceptors can reduce membrane permeability.">?</button>
+                  </li>
+                  <li>
+                    synthetic accessibility ≤ 6
+                    <button class="help-button" type="button" aria-label="Explain synthetic accessibility" aria-expanded="false" aria-controls="help-bubble" data-help="Synthetic accessibility is a score from about 1 (easier to synthesize) to 10 (harder).">?</button>
+                  </li>
+                </ul>
+                
+              </div>
+              <div class="panel-right" style="flex: 0 0 60%;">
+                <div class="control-grid">
+                  <div class="control-field">
+                    <div class="control-label-row">
+                      <label for="batch-size">Batch size</label>
+                      <button class="help-button" type="button" aria-label="Explain batch size" aria-expanded="false" aria-controls="help-bubble" data-help="The number of molecules to generate in this run.">?</button>
+                    </div>
+                    <input id="batch-size" name="batch_size" type="number" min="1" max="50" value="20" />
+                  </div>
+                  <div class="control-field">
+                    <div class="control-label-row">
+                      <label for="temperature">Temperature</label>
+                      <button class="help-button" type="button" aria-label="Explain temperature" aria-expanded="false" aria-controls="help-bubble" data-help="Temperature controls sampling randomness. Lower values keep generations more predictable, higher values increase variety but can produce more invalid molecules.">?</button>
+                    </div>
+                    <input id="temperature" name="temperature" type="number" min="0.05" max="2" step="0.05" value="0.8" />
+                  </div>
+                  <div class="control-field">
+                    <div class="control-label-row">
+                      <label for="top-k">Top-k</label>
+                      <button class="help-button" type="button" aria-label="Explain top-k" aria-expanded="false" aria-controls="help-bubble" data-help="At each generation step, ChemGPT samples only from the k most likely next tokens. Smaller values are more conservative; larger values allow more variety.">?</button>
+                    </div>
+                    <input id="top-k" name="top_k" type="number" min="1" max="200" value="50" />
+                  </div>
+                  <div class="control-field">
+                    <div class="control-label-row">
+                      <label for="max-length">Max length</label>
+                      <button class="help-button" type="button" aria-label="Explain maximum length" aria-expanded="false" aria-controls="help-bubble" data-help="The maximum number of new tokens ChemGPT may add after the starting structure. Higher limits allow larger molecules and increase generation time.">?</button>
+                    </div>
+                    <input id="max-length" name="max_length" type="number" min="1" max="200" value="80" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button class="primary-action" type="submit" open>
+              Generate candidates <span aria-hidden="true">→</span>
+            </button>
+            <button class="evaluation-link" data-open-evaluation type="button">
+              View model training info
+            </button>
+            
+
+            
+          </form>
+        </div>
+
+        <div class="panel" id="optimize-panel" hidden>
+          <form class="input-card" id="optimize-form">
+            <h2>Enter your complete molecule to optimize.</h2>
+            <div class="panel-divider">
+              <div class="panel-left" style="flex: 0 0 59%">
+                <textarea id="smiles" name="smiles" rows="4" required maxlength="2000" placeholder="Enter in SMILES format"></textarea>
+                <div class="example-row">
+                  <span>Examples</span>
+                  <button type="button" class="example" data-target="smiles" data-value="CCOc1ccc(O)cc1">CCOc1ccc(O)cc1</button>
+                  <button type="button" class="example" data-target="smiles" data-value="COc1ccc(CCN(C)C)cc1">COc1ccc(CCN(C)C)cc1</button>
+                </div>
+
+                <div class="advanced">
+                  <fieldset class="objective-picker">
+                    <label class="objective-picker-label">Optimize for</label>
+                    <div class="objective-options">
+                      <label>
+                        <input
+                          type="radio"
+                          name="objective"
+                          value="Increase Predicted ERα Activity"
+                          checked
+                        />
+                        <span>Increase ERα activity</span>
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name="objective"
+                          value="Lower Predicted ClinTox Toxicity"
+                        />
+                        <span>Lower ClinTox toxicity</span>
+                      </label>
+                      <label>
+                        <input type="radio" name="objective" value="Decrease LogP" />
+                        <span>Decrease LogP</span>
+                      </label>
+                    </div>
+                  </fieldset>
+                  <input hidden id="limit" name="limit" type="number" min="1" max="50" value="50" />
+                </div>
+              </div>
+              <div class="panel-right" style="flex: 0 0 39%">
+                <article class="molecule-card molecule-card-preview">
+                  <div class="molecule-image" aria-live="polite">
+                    <img id="input-image" alt="" hidden>
+                    <div class="preview-loader" id="input-image-loader" hidden aria-label="Loading molecule preview"></div>
+                    <p class="preview-placeholder" id="input-image-placeholder">Enter a valid SMILES to preview</p>
+                  </div>
+                  <div class="molecule-body">
+                    <div class="score-grid">
+                      <div class="score">
+                        <strong id="input-eraactivity">N/A</strong>
+                        <span>ERα ACTIVITY</span>
+                      </div>
+                      <div class="score">
+                        <strong id="input-toxicity">N/A</strong>
+                        <span>TOXICITY</span>
+                      </div>
+                      <div class="score">
+                        <strong id="input-weight">N/A</strong>
+                        <span>WEIGHT</span>
+                      </div>
+                      <div class="score">
+                        <strong id="input-logp">N/A</strong>
+                        <span>LOG P</span>
+                      </div>
+                      <div class="score">
+                        <strong id="input-hbdhba">N/A</strong>
+                        <span>HBD / HBA</span>
+                      </div>
+                      <div class="score">
+                        <strong id="input-sa">N/A</strong>
+                        <span>SA SCORE</span>
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </div>
+            
+            <button class="primary-action" type="submit">
+              Explore analogs <span aria-hidden="true">→</span>
+            </button>
+            <button class="evaluation-link" data-open-evaluation type="button">
+              View model training info
+            </button>
+          </form>
+        </div>
+      </section>
+
+      <section class="run-status" id="run-status" hidden aria-live="polite">
+        <div class="loader" aria-hidden="true"></div>
+        <div>
+          <p id="status-title">Loading</p>
+        </div>
+      </section>
+
+      <section class="results" id="results" hidden aria-live="polite">
+        <div class="results-heading">
+          <div>
+            <h2 id="results-title">Candidate molecules</h2>
+          </div>
+          <div class="export-actions" id="export-actions" hidden>
+            <button class="secondary-action" type="button" data-export="csv">Export CSV</button>
+          </div>
+        </div>
+        <div class="candidate-grid" id="candidate-grid"></div>
+      </section>
+    </main>
+
+    <dialog class="evaluation-dialog" id="evaluation-dialog" aria-labelledby="evaluation-title">
+      <div class="evaluation-dialog-shell">
+        <header class="evaluation-dialog-header">
+          <div>
+            <h2 id="evaluation-title">Model training info</h2>
+          </div>
+          <button class="dialog-close" data-close-evaluation type="button" aria-label="Close evaluation">
+            <span aria-hidden="true">×</span>
+          </button>
+        </header>
+        <div class="metrics-card" id="metrics-content" aria-live="polite">
+          <div class="skeleton-line"></div>
+          <div class="skeleton-line short"></div>
+        </div>
+      </div>
+    </dialog>
+
+    <div class="help-bubble" id="help-bubble" role="tooltip" hidden></div>
+
+    <footer>
+      <p>
+        For research prototype only. Predictions are not clinical evidence.<br>
+        &copy; the chuddingtons 2026
+      </p>
+    </footer>
+  </body>
+</html>
