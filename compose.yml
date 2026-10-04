@@ -1,0 +1,35 @@
+name: estrogen
+
+services:
+  estrogen-app:
+    build:
+      context: .
+      args:
+        TORCH_VERSION: ${TORCH_VERSION:-2.14.1}
+        TORCH_INDEX_URL: ${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cpu}
+    image: estrogen-molecule-studio:local
+    container_name: estrogen-app
+    init: true
+    expose:
+      - "8000"
+    environment:
+      HF_HOME: /var/cache/huggingface
+      HF_TOKEN: ${HF_TOKEN:-}
+      HF_HUB_DISABLE_TELEMETRY: "1"
+      TOKENIZERS_PARALLELISM: "false"
+    volumes:
+      - huggingface_cache:/var/cache/huggingface
+    networks:
+      frontend:
+        aliases:
+          - estrogen-app
+    restart: unless-stopped
+    stop_grace_period: 30s
+
+networks:
+  frontend:
+    external: true
+    name: ${ROUTER_NETWORK:-frontend}
+
+volumes:
+  huggingface_cache:
