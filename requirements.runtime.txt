@@ -1,0 +1,13 @@
+# runtime only stuff (no training needed)
+fastapi==0.142.2
+uvicorn[standard]==0.54.0
+rdkit==2026.3.6
+transformers==4.57.6
+selfies==1.0.4
+Pillow==12.3.0
+accelerate==1.15.0
+numpy==2.5.3
+scikit-learn==1.9.1
+joblib==1.6.0
+safetensors==0.8.0
+tokenizers==0.22.2
