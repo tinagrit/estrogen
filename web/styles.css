@@ -4,9 +4,9 @@
   --paper: #f6f7f2;
   --surface: rgba(255, 255, 252, 0.82);
   --line: rgba(20, 34, 29, 0.14);
-  --main-colour: #176b4d;
-  --main-colour-dark: #0c4e37;
-  --lime: #d7f36a;
+  --main-colour: #fd6ea7;
+  --main-colour-dark: #9e2a58;
+  --lime: #fbc8dc;
   --peach: #ffb890;
   --danger: #9c3a30;
   --shadow: 0 0 20px rgba(26, 51, 41, 0.1);
@@ -82,6 +82,7 @@ main {
   cursor: pointer; 
   transition: background .2s ease; 
   border-radius: 30px;
+  border: 2px solid var(--main-colour);
 }
 
 .mode-tab:hover { 
