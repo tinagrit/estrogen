@@ -1,0 +1,62 @@
+{
+  "generated_at_utc": "2026-10-04T01:58:14.671338+00:00",
+  "evaluation_scope": "Preliminary computational evaluation; metrics do not constitute experimental or clinical validation.",
+  "eralpha_activity": {
+    "display_name": "Predicted ERalpha activity probability",
+    "dataset": "ChEMBL target CHEMBL206",
+    "label": "Active when median pChEMBL >= 6.0",
+    "split": "Fixed stratified random molecule split (80% train / 20% test)",
+    "train_samples": 3061,
+    "test": {
+      "samples": 766,
+      "positive_samples": 570,
+      "positive_rate": 0.7441253263707572,
+      "roc_auc": 0.9177228786251342,
+      "average_precision": 0.9576923505679173,
+      "accuracy": 0.8759791122715405,
+      "precision": 0.9101899827288429,
+      "recall": 0.9245614035087719,
+      "f1": 0.917319408181027,
+      "confusion_matrix": [
+        [
+          144,
+          52
+        ],
+        [
+          43,
+          527
+        ]
+      ],
+      "decision_threshold": 0.5
+    }
+  },
+  "clintox_toxicity": {
+    "display_name": "Predicted ClinTox toxicity probability",
+    "dataset": "zpn/clintox CT_TOX",
+    "label": "CT_TOX binary label",
+    "split": "Official ClinTox test split; train and validation used for training",
+    "train_samples": 1310,
+    "test": {
+      "samples": 148,
+      "positive_samples": 10,
+      "positive_rate": 0.06756756756756757,
+      "roc_auc": 0.7869565217391304,
+      "average_precision": 0.4361696675205857,
+      "accuracy": 0.9324324324324325,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1": 0.0,
+      "confusion_matrix": [
+        [
+          138,
+          0
+        ],
+        [
+          10,
+          0
+        ]
+      ],
+      "decision_threshold": 0.5
+    }
+  }
+}
