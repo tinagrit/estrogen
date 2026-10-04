@@ -108,29 +108,40 @@ def generate_smiles(
             do_sample=True,
             temperature=max(float(temperature), 0.05),
             top_k=max(1, int(top_k)),
-            max_length=token_limit,
+            max_new_tokens=max(1, int(max_length)),
+            min_new_tokens=1,
             num_return_sequences=max(1, min(int(num_return_sequences), 50)),
+            bos_token_id=cls_token_id,
             eos_token_id=sep_token_id,
-            pad_token_id=sep_token_id,
+            pad_token_id=tokenizer.convert_tokens_to_ids("[PAD]"),
         )
     except Exception as error:
         raise RuntimeError(f"ChemGPT generation failed: {error}") from error
 
     results: list[str] = []
+
     for sequence in output:
-        continuation = sequence[input_ids.shape[1]:].tolist()
-        tokens = tokenizer.convert_ids_to_tokens(continuation)
-        tokens = [token for token in tokens if token not in ("[CLS]", "[SEP]")]
-        if not tokens:
+        # Let the tokenizer reconstruct WordPiece fragments instead of
+        # concatenating raw tokens containing "##".
+        generated_selfies = tokenizer.decode(
+            sequence,
+            skip_special_tokens=True,
+            clean_up_tokenization_spaces=False,
+        ).replace(" ", "")
+
+        if not generated_selfies:
             continue
+
         try:
-            completed_smiles = sf.decoder(prefix_selfies + "".join(tokens))
+            completed_smiles = sf.decoder(generated_selfies)
             molecule = Chem.MolFromSmiles(completed_smiles)
             if molecule is None:
                 continue
+
             smiles = Chem.MolToSmiles(molecule, canonical=True)
             if smiles not in results:
                 results.append(smiles)
         except (ValueError, sf.DecoderError):
             continue
+
     return results

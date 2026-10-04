@@ -72,9 +72,13 @@ def sdf_export(rows: list[dict]) -> str:
     return "".join(records)
 
 
-def show_results(rows: list[dict], key: str) -> None:
+def show_results(
+    rows: list[dict],
+    key: str,
+    empty_message: str = "No candidates passed the filters in this run.",
+) -> None:
     if not rows:
-        st.info("No candidates passed the filters and objective in this run.")
+        st.info(empty_message)
         return
     frame = pd.DataFrame(rows)
     st.dataframe(frame, hide_index=True, use_container_width=True)
@@ -180,4 +184,20 @@ with tab_optimize:
         analogs = optimization["analogs"]
         st.markdown("**Reference properties**")
         st.dataframe(pd.DataFrame([baseline]), hide_index=True, use_container_width=True)
-        show_results(analogs, "eralpha_optimized_analogs")
+        if analogs:
+            improved_count = sum(bool(row.get("improves_objective")) for row in analogs)
+            if improved_count:
+                st.success(
+                    f"{improved_count} of {len(analogs)} displayed analogs improve "
+                    "the selected objective."
+                )
+            else:
+                st.warning(
+                    "The supported transformations produced valid analogs, but none "
+                    "improved the selected objective. Showing the closest candidates."
+                )
+        show_results(
+            analogs,
+            "eralpha_optimized_analogs",
+            "No supported structural transformation matched this molecule.",
+        )
