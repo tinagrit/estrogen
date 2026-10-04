@@ -7,7 +7,7 @@ from typing import Any
 import joblib
 import numpy as np
 from rdkit import Chem, DataStructs
-from rdkit.Chem import rdMolDescriptors
+from rdkit.Chem import rdFingerprintGenerator
 from sklearn.dummy import DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
 
@@ -16,14 +16,17 @@ ARTIFACT_DIR = Path(__file__).resolve().parent / "artifacts"
 AFFINITY_PATH = ARTIFACT_DIR / "affinity.joblib"
 TOXICITY_PATH = ARTIFACT_DIR / "toxicity.joblib"
 
+MORGAN_GENERATOR = rdFingerprintGenerator.GetMorganGenerator(
+    radius=2,
+    fpSize=1024,
+)
+
 def featurize_smiles(smiles: str) -> np.ndarray:
     """Return a 1024-bit radius-2 Morgan fingerprint for a valid SMILES."""
     molecule = Chem.MolFromSmiles(smiles)
     if molecule is None:
         raise ValueError(f"Invalid SMILES: {smiles}")
-    fingerprint = rdMolDescriptors.GetMorganFingerprintAsBitVect(
-        molecule, radius=2, nBits=1024
-    )
+    fingerprint = MORGAN_GENERATOR.GetFingerprint(molecule)
     features = np.zeros((1024,), dtype=np.uint8)
     DataStructs.ConvertToNumpyArray(fingerprint, features)
     return features
