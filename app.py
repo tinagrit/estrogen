@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 import pandas as pd
 import streamlit as st
 from rdkit import Chem
@@ -8,7 +10,8 @@ from rdkit.Chem import Draw
 from filters import analyze_smiles, filter_candidates
 from generator import generate_smiles
 from models import (
-    AFFINITY_PATH,
+    ACTIVITY_PATH,
+    METRICS_PATH,
     TOXICITY_PATH,
     featurize_smiles,
     load_predictors,
@@ -19,7 +22,10 @@ from optimizer import optimize_smiles
 st.set_page_config(page_title="ERα Molecule Studio", page_icon="⚗", layout="wide")
 st.title("ERα Molecule Studio")
 st.caption("Complete a SMILES prefix or optimize a complete user-provided molecule.")
-st.caption("Research prototype only. Scores are computational estimates, not clinical evidence.")
+st.caption(
+    "Predicted ERα activity and ClinTox toxicity probabilities are computational "
+    "screening estimates, not experimental or clinical evidence."
+)
 
 
 @st.cache_resource
@@ -30,12 +36,12 @@ def cached_predictors():
 @st.cache_data(show_spinner=False)
 def score_cached(smiles: str) -> tuple[float, float]:
     features = featurize_smiles(smiles).reshape(1, -1)
-    affinity_model, toxicity_model = cached_predictors()
-    affinity_index = list(affinity_model.classes_).index(1)
+    activity_model, toxicity_model = cached_predictors()
+    activity_index = list(activity_model.classes_).index(1)
     toxicity_index = list(toxicity_model.classes_).index(1)
-    affinity = float(affinity_model.predict_proba(features)[0, affinity_index])
+    activity = float(activity_model.predict_proba(features)[0, activity_index])
     toxicity = float(toxicity_model.predict_proba(features)[0, toxicity_index])
-    return affinity, toxicity
+    return activity, toxicity
 
 
 def metrics_and_scores(smiles: str) -> dict | None:
@@ -43,14 +49,14 @@ def metrics_and_scores(smiles: str) -> dict | None:
     if metrics is None:
         return None
     try:
-        affinity, toxicity = score_cached(metrics.smiles)
+        activity, toxicity = score_cached(metrics.smiles)
     except Exception as error:
         st.warning(f"Could not score {metrics.smiles}: {error}")
         return None
     return {
         **metrics.as_dict(),
-        "affinity_percent": round(affinity * 100, 1),
-        "toxicity_percent": round(toxicity * 100, 1),
+        "predicted_eralpha_activity_percent": round(activity * 100, 1),
+        "predicted_clintox_toxicity_percent": round(toxicity * 100, 1),
     }
 
 
@@ -99,8 +105,8 @@ def show_results(
 
 def model_status() -> None:
     missing = []
-    if not AFFINITY_PATH.exists():
-        missing.append("ERα affinity")
+    if not ACTIVITY_PATH.exists():
+        missing.append("ERα activity")
     if not TOXICITY_PATH.exists():
         missing.append("ClinTox toxicity")
     if missing:
@@ -108,6 +114,43 @@ def model_status() -> None:
             f"Using an untrained neutral placeholder for {', '.join(missing)}. "
             "Run `python train_models.py` to train the missing model(s)."
         )
+
+
+def show_model_evaluation() -> None:
+    if not METRICS_PATH.is_file():
+        return
+    try:
+        report = json.loads(METRICS_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    with st.expander("Preliminary model evaluation"):
+        st.caption(str(report.get("evaluation_scope", "")))
+        for key in ("eralpha_activity", "clintox_toxicity"):
+            model_report = report.get(key, {})
+            test = model_report.get("test", {})
+            st.markdown(f"**{model_report.get('display_name', key)}**")
+            st.caption(
+                f"{model_report.get('dataset', '')} · {model_report.get('split', '')}"
+            )
+            columns = st.columns(4)
+            columns[0].metric("ROC-AUC", f"{test.get('roc_auc', 0):.3f}")
+            columns[1].metric(
+                "Average precision", f"{test.get('average_precision', 0):.3f}"
+            )
+            columns[2].metric("F1", f"{test.get('f1', 0):.3f}")
+            columns[3].metric("Test molecules", int(test.get("samples", 0)))
+
+
+show_model_evaluation()
+if (
+    ACTIVITY_PATH.is_file()
+    and TOXICITY_PATH.is_file()
+    and not METRICS_PATH.is_file()
+):
+    st.info(
+        "These model artifacts predate the held-out evaluation report. Run "
+        "`python3 train_models.py` to retrain them and generate metrics."
+    )
 
 
 tab_generate, tab_optimize = st.tabs(["SMILES Completion", "Lead Optimization"])
@@ -159,7 +202,11 @@ with tab_optimize:
     )
     objective = st.selectbox(
         "Optimization objective",
-        ["Decrease LogP", "Lower Toxicity Risk", "Increase ERα Affinity"],
+        [
+            "Decrease LogP",
+            "Lower Predicted ClinTox Toxicity",
+            "Increase Predicted ERα Activity",
+        ],
     )
     model_status()
     if st.button("Find analogs", type="primary", disabled=not reference.strip()):
