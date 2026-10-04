@@ -18,6 +18,7 @@ from service import (
     generate_candidates,
     molecule_png,
     optimize_candidates,
+    score_molecule,
     sdf_export,
 )
 
@@ -44,6 +45,10 @@ class OptimizeRequest(BaseModel):
     smiles: str = Field(min_length=1, max_length=2000)
     objective: Objective
     limit: int = Field(default=15, ge=1, le=50)
+
+
+class ScoreRequest(BaseModel):
+    smiles: str = Field(min_length=1, max_length=2000)
 
 
 class ExportRequest(BaseModel):
@@ -143,6 +148,14 @@ async def optimize(request: OptimizeRequest) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail=str(error)) from error
     except RuntimeError as error:
         raise HTTPException(status_code=500, detail=str(error)) from error
+
+
+@app.post("/api/score")
+async def score(request: ScoreRequest) -> dict[str, str | float | int]:
+    result = await run_in_threadpool(score_molecule, request.smiles.strip())
+    if result is None:
+        raise HTTPException(status_code=400, detail="Enter a complete, valid SMILES string.")
+    return result
 
 
 @app.get("/api/molecule-image")
