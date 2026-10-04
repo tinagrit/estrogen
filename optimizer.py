@@ -56,12 +56,12 @@ def optimize_smiles(smiles: str, objective: str, limit: int = 15) -> tuple[dict,
     baseline_metrics = analyze_smiles(smiles)
     if baseline_metrics is None:
         raise ValueError("Enter a valid SMILES string.")
-    baseline_affinity, baseline_toxicity = predict_scores(baseline_metrics.smiles)
+    baseline_activity, baseline_toxicity = predict_scores(baseline_metrics.smiles)
     baseline = {
         **baseline_metrics.as_dict(),
         "passes_filters": passes_filters(baseline_metrics),
-        "affinity": baseline_affinity,
-        "toxicity": baseline_toxicity,
+        "eralpha_activity_probability": baseline_activity,
+        "clintox_toxicity_probability": baseline_toxicity,
     }
 
     molecule = Chem.MolFromSmiles(baseline_metrics.smiles)
@@ -73,27 +73,27 @@ def optimize_smiles(smiles: str, objective: str, limit: int = 15) -> tuple[dict,
         if metrics is None:
             continue
         try:
-            affinity, toxicity = predict_scores(metrics.smiles)
+            activity, toxicity = predict_scores(metrics.smiles)
         except (ValueError, RuntimeError):
             continue
         row = {
             **metrics.as_dict(),
             "transformations": ", ".join(sorted(transformations)),
             "passes_filters": passes_filters(metrics),
-            "affinity": affinity,
-            "toxicity": toxicity,
-            "delta_affinity": affinity - baseline_affinity,
+            "eralpha_activity_probability": activity,
+            "clintox_toxicity_probability": toxicity,
+            "delta_eralpha_activity": activity - baseline_activity,
             "delta_logp": metrics.logp - baseline_metrics.logp,
-            "delta_toxicity": toxicity - baseline_toxicity,
+            "delta_clintox_toxicity": toxicity - baseline_toxicity,
         }
         if objective == "Decrease LogP":
             objective_delta = row["delta_logp"]
             improves = objective_delta < 0
-        elif objective == "Lower Toxicity Risk":
-            objective_delta = row["delta_toxicity"]
+        elif objective == "Lower Predicted ClinTox Toxicity":
+            objective_delta = row["delta_clintox_toxicity"]
             improves = objective_delta < 0
         else:
-            objective_delta = row["delta_affinity"]
+            objective_delta = row["delta_eralpha_activity"]
             improves = objective_delta > 0
         row["objective_delta"] = objective_delta
         row["improves_objective"] = improves
@@ -101,9 +101,9 @@ def optimize_smiles(smiles: str, objective: str, limit: int = 15) -> tuple[dict,
 
     sort_key = {
         "Decrease LogP": "delta_logp",
-        "Lower Toxicity Risk": "delta_toxicity",
-        "Increase ERα Affinity": "delta_affinity",
-    }.get(objective, "delta_affinity")
-    reverse = objective == "Increase ERα Affinity"
+        "Lower Predicted ClinTox Toxicity": "delta_clintox_toxicity",
+        "Increase Predicted ERα Activity": "delta_eralpha_activity",
+    }.get(objective, "delta_eralpha_activity")
+    reverse = objective == "Increase Predicted ERα Activity"
     candidates.sort(key=lambda row: row[sort_key], reverse=reverse)
     return baseline, candidates[:limit]
